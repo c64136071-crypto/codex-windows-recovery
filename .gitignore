@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.log
+*.tmp
+*.bak
+.venv/
+local/
+config.toml
+preserved-*.json
+*.reg
+*.lnk
+*.zip
