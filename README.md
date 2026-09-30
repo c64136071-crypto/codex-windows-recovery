@@ -40,19 +40,19 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-Codex.ps1 -Mode 
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Start-Codex.ps1 -Mode Start
 ```
 
-`Doctor` is read-only and performs a full file-hash check. `Start` performs a
-full check after a package-version change, otherwise a faster inventory and
-size check plus marketplace hash. If resources are damaged, `Start` repairs
-them only when Codex is closed. `Repair` forces a verified repair when closed.
-`-NoActivate` prepares resources without starting the app. `-Json` provides a
-machine-readable `Doctor` report.
+`Start` launches the original Windows Codex app entry and does not run Python,
+repair resources, set an environment override, or wait for a window. This is
+the recommended daily path. `Doctor` is read-only and performs a full file-hash
+check. `Repair` forces a verified repair when Codex is closed. Add
+`-UseRecoveryResources` only when you intentionally want the legacy mirrored
+resource flow. `-NoActivate` prepares resources without starting the app, and
+`-Json` provides a machine-readable `Doctor` report.
 
-On first setup, the launcher sets the user-level
-`CODEX_ELECTRON_BUNDLED_PLUGINS_RESOURCES_PATH` variable and asks you to sign
-out of Windows and sign back in. This is needed because Explorer may have an old
-environment snapshot. A pre-existing *different* override is never replaced.
-The script never kills Codex, resets app data, changes `config.toml`, or edits
-model-provider settings.
+The normal `Start` path does not set a user-level environment variable. The
+legacy mirrored resource flow may configure
+`CODEX_ELECTRON_BUNDLED_PLUGINS_RESOURCES_PATH`; remove that override only when
+its value points to this tool's mirror. The script never kills Codex, resets
+app data, changes `config.toml`, or edits model-provider settings.
 
 ## Update behavior
 

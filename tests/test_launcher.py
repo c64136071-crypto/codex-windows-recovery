@@ -38,6 +38,30 @@ class LauncherTests(unittest.TestCase):
             self.assertFalse((home / 'windows-recovery').exists(), 'Doctor must be read-only')
             return result
 
+    def test_start_skips_recovery_resources_by_default(self):
+        with tempfile.TemporaryDirectory(prefix='codex-start-test-') as directory:
+            home = Path(directory)
+            harness = home / 'harness.ps1'
+            launcher = str(ROOT / 'Start-Codex.ps1').replace("'", "''")
+            package = ("[pscustomobject]@{PackageFamilyName='OpenAI.Codex_test';"
+                       "PackageFullName='OpenAI.Codex_1.0_test';Version='1.0';"
+                       "InstallLocation=$env:TEMP;Status='Ok'}")
+            harness.write_text(
+                f"function Get-AppxPackage {{ {package} }}\n"
+                "function Get-StartApps { [pscustomobject]@{AppID='OpenAI.Codex_test!App'} }\n"
+                "function Start-Process { throw 'Start -NoActivate must not activate the app' }\n"
+                f"& '{launcher}' -Mode Start -NoActivate -CodexHome '{str(home).replace(chr(39), chr(39)*2)}'\n"
+                "exit $LASTEXITCODE\n",
+                encoding='utf-8',
+            )
+            result = subprocess.run(
+                ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(harness)],
+                capture_output=True, text=True, timeout=30,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn('Recovery checks were skipped', result.stdout)
+            self.assertFalse((home / 'windows-recovery').exists())
+
     def test_healthy_exit_and_pure_json(self):
         result = self.run_doctor()
         self.assertEqual(result.returncode, 0, result.stderr)
