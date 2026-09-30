@@ -5,7 +5,8 @@ param(
     [string]$Python = '',
     [int]$WindowTimeoutSeconds = 30,
     [switch]$NoActivate,
-    [switch]$Json
+    [switch]$Json,
+    [switch]$UseRecoveryResources
 )
 $ErrorActionPreference = 'Stop'
 
@@ -62,6 +63,15 @@ try {
     if (-not $script:package) { throw 'OpenAI.Codex is not registered for this Windows user.' }
     $appId = "$($script:package.PackageFamilyName)!App"
     if (-not (Get-StartApps | Where-Object AppID -eq $appId)) { throw 'Codex Windows app entry is missing.' }
+
+    if ($Mode -eq 'Start' -and -not $UseRecoveryResources) {
+        if (-not $NoActivate) {
+            Start-Process -FilePath explorer.exe -ArgumentList "shell:AppsFolder\$appId"
+        }
+        Write-Output 'Original Codex Windows app entry launched. Recovery checks were skipped.'
+        exit 0
+    }
+
     $script:appExe = Join-Path $script:package.InstallLocation 'app\ChatGPT.exe'
     $script:resources = Join-Path $script:package.InstallLocation 'app\resources'
     $script:pythonExe = Find-Python
